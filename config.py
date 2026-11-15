@@ -44,3 +44,24 @@ def controlla_modello(modello: str = MODELLO) -> None:
     if modello not in disponibili and f"{modello}:latest" not in disponibili:
         print(f"Il modello {modello} non c'è. Con Ollama: ollama pull {modello}")
         sys.exit(1)
+
+
+def chat(rispondi, nome: str = "Assistente") -> None:
+    """La parte noiosa di ogni chat: legge le domande, stampa le risposte, si ferma con "esci".
+
+    `rispondi` è la funzione che ogni lezione scrive: riceve la domanda e restituisce la risposta.
+    """
+    print("Scrivi la tua domanda (\"esci\" per finire).")
+    try:
+        while True:
+            try:
+                domanda = input("\nTu: ").strip()
+            except EOFError:
+                break
+            if domanda.lower() == "esci":
+                break
+            if domanda:
+                print(f"\n{nome}: {rispondi(domanda)}")
+    except KeyboardInterrupt:  # Ctrl+C in qualunque momento chiude la chat senza errori
+        pass
+    print("\nCiao!")

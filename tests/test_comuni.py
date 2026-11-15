@@ -38,3 +38,45 @@ def test_controlla_modello_mancante(capsys):
     with pytest.raises(SystemExit):
         config.controlla_modello("modello-che-non-esiste")
     assert "ollama pull modello-che-non-esiste" in capsys.readouterr().out
+
+
+def _input_da(righe):
+    iteratore = iter(righe)
+
+    def finto_input(_prompt=""):
+        riga = next(iteratore)
+        if isinstance(riga, BaseException):
+            raise riga
+        return riga
+
+    return finto_input
+
+
+def test_chat_passa_le_domande_e_stampa_le_risposte(monkeypatch, capsys):
+    monkeypatch.setattr("builtins.input", _input_da(["ciao", "come va?", "esci"]))
+    ricevute = []
+    config.chat(lambda domanda: ricevute.append(domanda) or f"eco: {domanda}")
+    assert ricevute == ["ciao", "come va?"]
+    assert "eco: come va?" in capsys.readouterr().out
+
+
+def test_chat_ignora_le_righe_vuote(monkeypatch):
+    monkeypatch.setattr("builtins.input", _input_da(["", "   ", "esci"]))
+    ricevute = []
+    config.chat(lambda domanda: ricevute.append(domanda) or "")
+    assert ricevute == []
+
+
+def test_chat_ctrl_c_durante_la_risposta(monkeypatch, capsys):
+    monkeypatch.setattr("builtins.input", _input_da(["domanda"]))
+
+    def interrotta(_domanda):
+        raise KeyboardInterrupt
+
+    config.chat(interrotta)
+    assert "Ciao" in capsys.readouterr().out
+
+
+def test_chat_fine_input(monkeypatch):
+    monkeypatch.setattr("builtins.input", _input_da([EOFError()]))
+    config.chat(lambda domanda: "mai chiamata")
