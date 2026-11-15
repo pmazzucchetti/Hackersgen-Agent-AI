@@ -1,11 +1,12 @@
 """Lezione 4, passo 1: dal dire al fare (tool calling).
 
-Non vogliamo solo risposte: vogliamo che l'assistente FACCIA cose. Gli chiediamo
-un promemoria e risponde "fatto!"... ma non ha fatto niente: sa solo scrivere testo.
-Il trucco: gli descriviamo una funzione. Il modello non la esegue, scrive un JSON
-con il nome e gli argomenti; siamo noi a eseguirla.
+Nel passo 4 della lezione 3, a "segnami un promemoria" l'assistente risponde
+"ok!"... ma non ha fatto niente: sa solo scrivere testo.
+Il trucco: gli descriviamo una funzione. Il modello non la esegue: scrive un JSON
+con il nome e gli argomenti. Siamo noi a eseguirla e a dirgli com'è andata.
 
 Lancia: uv run lezione4/01_promemoria.py
+Prova:  "segnami un promemoria per mercoledì: ripassare storia"
 """
 
 import json
@@ -29,20 +30,32 @@ STRUMENTO = {"type": "function", "function": {
     "name": "aggiungi_promemoria",
     "description": "Aggiunge un promemoria all'agenda dello studente",
     "parameters": {"type": "object", "required": ["testo", "data"], "properties": {
-        "testo": {"type": "string"}, "data": {"type": "string", "description": "AAAA-MM-GG"}}},
+        "testo": {"type": "string"},
+        "data": {"type": "string", "description": "AAAA-MM-GG"},
+    }},
 }}
 
-messaggi = [{"role": "system", "content": config.CALENDARIO},
-            {"role": "user", "content": "Segnami un promemoria: ripassare storia mercoledì."}]
+messaggi = [{"role": "system", "content": f"Sei {config.NOME_ASSISTENTE}, l'assistente della 4B. {config.CALENDARIO}"}]
 
-print("SENZA strumenti:")
-print(llm.chat.completions.create(model=config.MODELLO, messages=messaggi).choices[0].message.content)
-print("Promemoria nell'agenda:", dati.carica_stato()["promemoria"].get(config.UTENTE, []))
 
-print("\nCON lo strumento:")
-risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi, tools=[STRUMENTO])
-for chiamata in risposta.choices[0].message.tool_calls or []:
-    argomenti = json.loads(chiamata.function.arguments)
-    print("Il modello chiede di eseguire:", chiamata.function.name, argomenti)
-    aggiungi_promemoria(**argomenti)  # siamo NOI a eseguire la funzione
-print("Promemoria nell'agenda:", dati.carica_stato()["promemoria"].get(config.UTENTE, []))
+def rispondi(domanda):
+    messaggi.append({"role": "user", "content": domanda})
+    messaggio = llm.chat.completions.create(model=config.MODELLO, messages=messaggi, tools=[STRUMENTO]).choices[0].message
+    messaggi.append(messaggio)
+    if not messaggio.tool_calls:
+        return messaggio.content
+
+    for chiamata in messaggio.tool_calls:
+        argomenti = json.loads(chiamata.function.arguments)
+        print(f"  [il modello chiede: {chiamata.function.name} {argomenti}]")
+        risultato = aggiungi_promemoria(argomenti["testo"], argomenti["data"])  # siamo NOI a eseguirla
+        messaggi.append({"role": "tool", "tool_call_id": chiamata.id, "content": json.dumps(risultato)})
+    print(f"  [agenda: {dati.carica_stato()['promemoria'].get(config.UTENTE)}]")
+
+    # Gli diciamo com'è andata e lui risponde
+    messaggio = llm.chat.completions.create(model=config.MODELLO, messages=messaggi).choices[0].message
+    messaggi.append(messaggio)
+    return messaggio.content
+
+
+config.chat(rispondi, nome=config.NOME_ASSISTENTE)

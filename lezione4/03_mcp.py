@@ -7,6 +7,8 @@ MCP (Model Context Protocol) è lo standard con cui un agent chiede a un sistema
 arrivano gli strumenti e chi li esegue.
 
 Lancia: uv run lezione4/03_mcp.py
+Prova:  "che compiti ho per domani?", "quali sono i miei voti?",
+        "mettimi un promemoria per giovedì: portare il workbook"
 """
 
 import json
@@ -25,20 +27,24 @@ SYSTEM_PROMPT = f"""Sei {config.NOME_ASSISTENTE}, l'assistente della 4B. {config
 Stai parlando con {config.UTENTE} (utente: {config.UTENTE}).
 Per fare un'azione usa SEMPRE lo strumento: non dire mai di aver fatto qualcosa che non hai fatto."""
 
-messaggi = [{"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": "Mettimi in agenda un promemoria per il giorno prima della verifica di storia, e dimmi cosa devo ripassare."}]
+messaggi = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-for passo in range(MAX_PASSI):
-    risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi, tools=STRUMENTI)
-    messaggio = risposta.choices[0].message
-    print(f"Giro {passo + 1}: il modello ha letto e scritto {risposta.usage.total_tokens} token")
-    messaggi.append(messaggio)
-    if not messaggio.tool_calls:
-        break
-    for chiamata in messaggio.tool_calls:
-        argomenti = json.loads(chiamata.function.arguments or "{}")
-        risultato = registro.chiama(chiamata.function.name, argomenti)  # lo esegue il registro, non noi
-        print(f"Passo {passo + 1}: {chiamata.function.name}({argomenti})")
-        messaggi.append({"role": "tool", "tool_call_id": chiamata.id, "content": risultato})
 
-print("\n" + (messaggio.content or "(nessuna risposta)"))
+def rispondi(domanda):
+    messaggi.append({"role": "user", "content": domanda})
+    for giro in range(MAX_PASSI):
+        risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi, tools=STRUMENTI)
+        messaggio = risposta.choices[0].message
+        messaggi.append(messaggio)
+        print(f"  [giro {giro + 1}: {risposta.usage.total_tokens} token]")
+        if not messaggio.tool_calls:
+            return messaggio.content
+        for chiamata in messaggio.tool_calls:
+            argomenti = json.loads(chiamata.function.arguments or "{}")
+            print(f"  [registro: {chiamata.function.name} {argomenti}]")
+            risultato = registro.chiama(chiamata.function.name, argomenti)  # lo esegue il registro, non noi
+            messaggi.append({"role": "tool", "tool_call_id": chiamata.id, "content": risultato})
+    return "Mi fermo qui: troppi passi."
+
+
+config.chat(rispondi, nome=config.NOME_ASSISTENTE)

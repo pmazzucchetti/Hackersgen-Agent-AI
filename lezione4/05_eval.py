@@ -36,10 +36,14 @@ def esegui_eval(system):
     superati = 0
     for domanda, attese in CASI:
         messaggi = [{"role": "system", "content": system}, {"role": "user", "content": domanda}]
-        risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi).choices[0].message.content
-        ok = any(parola.lower() in risposta.lower() for parola in attese)
-        superati += ok
-        print(f"  {'✅' if ok else '❌'} {domanda}  →  {' '.join(risposta.split())[:70]}")
+        risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi)
+        testo = risposta.choices[0].message.content
+        anteprima = testo.replace("\n", " ")[:70]
+        if any(parola.lower() in testo.lower() for parola in attese):
+            superati = superati + 1
+            print(f"  ✅ {domanda}  →  {anteprima}")
+        else:
+            print(f"  ❌ {domanda}  →  {anteprima}")
     print(f"  Superati: {superati}/{len(CASI)}")
 
 

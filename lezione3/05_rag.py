@@ -4,10 +4,11 @@ Il regolamento e la bacheca della scuola sono lunghi: metterli tutti nel prompt
 costa tanti token e confonde il modello. Allora:
   1. dividiamo i documenti in pezzi (un paragrafo ciascuno)
   2. trasformiamo ogni pezzo in un "vettore" di numeri (embedding)
-  3. per ogni domanda, prendiamo i pezzi più simili e mettiamo solo quelli nel prompt
-È la Retrieval Augmented Generation (RAG): recupera, poi genera.
+  3. a ogni domanda prendiamo i due pezzi più simili e passiamo solo quelli
+È la Retrieval Augmented Generation (RAG): prima recupera, poi genera.
 
 Lancia: uv run lezione3/05_rag.py
+Prova:  "posso usare il telefono in classe?", "quando c'è il torneo di calcetto?"
 """
 
 import math
@@ -18,12 +19,6 @@ import config
 config.controlla_modello()
 config.controlla_modello(config.MODELLO_EMBEDDING)
 llm = config.client()
-CARTELLA = Path(config.__file__).parent / "scuola"
-DOMANDA = "Posso usare il telefono in classe?"
-
-
-def vettore(testo):
-    return llm.embeddings.create(model=config.MODELLO_EMBEDDING, input=[testo]).data[0].embedding
 
 
 def somiglianza(a, b):  # 1 = stessa direzione, 0 = niente in comune
@@ -31,25 +26,37 @@ def somiglianza(a, b):  # 1 = stessa direzione, 0 = niente in comune
     return prodotto / (math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b)))
 
 
-def rispondi(contesto):
-    system = f"Sei {config.NOME_ASSISTENTE}, l'assistente della 4B. Rispondi in breve.\n{contesto}"
-    messaggi = [{"role": "system", "content": system}, {"role": "user", "content": DOMANDA}]
-    return llm.chat.completions.create(model=config.MODELLO, messages=messaggi).choices[0].message.content
-
-
-# 1. I pezzi: ogni paragrafo "## ..." del regolamento e della bacheca
+# 1. I pezzi: ogni paragrafo che inizia con "## " nel regolamento e nella bacheca
 pezzi = []
-for nome in ["regolamento.md", "bacheca.md"]:
-    pezzi += ["## " + p for p in (CARTELLA / nome).read_text(encoding="utf-8").split("\n## ")[1:]]
+for nome_file in ["regolamento.md", "bacheca.md"]:
+    testo = Path("scuola", nome_file).read_text(encoding="utf-8")
+    for paragrafo in testo.split("\n## ")[1:]:
+        pezzi.append("## " + paragrafo)
 
-# 2. Un vettore per ogni pezzo (in un'app vera si calcolano una volta e si salvano)
-vettori = [vettore(p) for p in pezzi]
+# 2. Un vettore per ogni pezzo, con una sola chiamata al modello di embedding
+risultato = llm.embeddings.create(model=config.MODELLO_EMBEDDING, input=pezzi)
+vettori = [elemento.embedding for elemento in risultato.data]
 
-# 3. I due pezzi più simili alla domanda
-v_domanda = vettore(DOMANDA)
-classifica = sorted(range(len(pezzi)), key=lambda i: somiglianza(v_domanda, vettori[i]), reverse=True)
-scelti = [pezzi[i] for i in classifica[:2]]
+messaggi = [{"role": "system", "content": f"""Sei {config.NOME_ASSISTENTE}, l'assistente della 4B.
+Rispondi in breve, dando del tu, usando gli estratti dei documenti della scuola che ti passo."""}]
 
-print("SENZA documenti:\n" + rispondi(""))
-print("\nPezzi trovati:", [p.split("\n")[0] for p in scelti])
-print("\nCON i pezzi trovati:\n" + rispondi("Usa solo questi estratti:\n" + "\n\n".join(scelti)))
+
+def rispondi(domanda):
+    # 3. I due pezzi più simili alla domanda
+    v_domanda = llm.embeddings.create(model=config.MODELLO_EMBEDDING, input=[domanda]).data[0].embedding
+    classifica = []
+    for pezzo, vettore in zip(pezzi, vettori):
+        classifica.append((somiglianza(v_domanda, vettore), pezzo))
+    classifica.sort(reverse=True)
+    scelti = [classifica[0][1], classifica[1][1]]
+    print("  [pezzi trovati: " + " | ".join(p.split("\n")[0] for p in scelti) + "]")
+
+    estratti = "\n\n".join(scelti)
+    messaggi.append({"role": "user", "content": f"Estratti:\n{estratti}\n\nDomanda: {domanda}"})
+    risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi)
+    testo = risposta.choices[0].message.content
+    messaggi.append({"role": "assistant", "content": testo})
+    return testo
+
+
+config.chat(rispondi, nome=config.NOME_ASSISTENTE)

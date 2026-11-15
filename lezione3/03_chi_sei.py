@@ -1,10 +1,11 @@
 """Lezione 3, passo 3: "chi sei?"
 
-Abbiamo collegato un modello e vorremmo che fosse il NOSTRO assistente. Ma se gli
-chiediamo chi è, risponde con il nome del modello. Il system prompt è il briefing
-che diamo al modello prima di ogni conversazione: chi è, cosa fa, come parla.
+Vorremmo che il modello fosse il NOSTRO assistente, ma se nella chat del passo 2
+gli chiedi chi è, risponde con il nome del modello. Il system prompt è il briefing
+che gli diamo prima di ogni conversazione: chi è, cosa fa, come parla.
 
-Lancia: uv run lezione3/03_chi_sei.py   (prova a cambiare SYSTEM_PROMPT)
+Lancia: uv run lezione3/03_chi_sei.py
+Prova:  "chi sei?", poi "quando ho la verifica di matematica?"
 """
 
 import config
@@ -16,16 +17,15 @@ SYSTEM_PROMPT = f"""Sei {config.NOME_ASSISTENTE}, l'assistente AI degli studenti
 dell'Istituto Tecnico "Valle dei Bit". Aiuti con orario, verifiche, compiti e regole della scuola.
 Rispondi in italiano, in modo breve e amichevole, dando del tu."""
 
+messaggi = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-def chiedi(messaggi):
+
+def rispondi(domanda):
+    messaggi.append({"role": "user", "content": domanda})
     risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi)
-    return risposta.choices[0].message.content
+    testo = risposta.choices[0].message.content
+    messaggi.append({"role": "assistant", "content": testo})
+    return testo
 
 
-domanda = {"role": "user", "content": "Chi sei?"}
-
-print("SENZA system prompt:")
-print(chiedi([domanda]))
-
-print("\nCON il system prompt:")
-print(chiedi([{"role": "system", "content": SYSTEM_PROMPT}, domanda]))
+config.chat(rispondi, nome=config.NOME_ASSISTENTE)
