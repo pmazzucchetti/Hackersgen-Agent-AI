@@ -49,4 +49,4 @@ def chiama(nome: str, argomenti: dict) -> str:
     if risultato.structured_content is not None:
         contenuto = risultato.structured_content
         return json.dumps(contenuto.get("result", contenuto), ensure_ascii=False)
-    return risultato.content[0].text
+    return json.dumps(json.loads(risultato.content[0].text), ensure_ascii=False)
