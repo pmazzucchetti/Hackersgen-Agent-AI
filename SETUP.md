@@ -11,7 +11,7 @@ di verifica: se è tutto verde, sei pronto.
 
 - Un computer **Windows 10/11**, **macOS** o **Linux**, con permesso di installare programmi.
 - **8 GB di RAM** come minimo (16 GB vanno meglio).
-- Circa **6 GB liberi** sul disco: il modello di AI da solo ne occupa 2,5.
+- Circa **7 GB liberi** sul disco: i due modelli di AI ne occupano circa 3.
 - Una connessione decente per i download (solo durante la preparazione: in diretta il
   modello gira sul tuo computer, senza internet).
 
@@ -107,11 +107,15 @@ Lo script funziona sulle distribuzioni con systemd (Ubuntu, Debian, Fedora, Mint
 altre). Se la tua non lo usa, avvia Ollama a mano con `ollama serve` in un terminale e
 lascialo aperto.
 
-**Scarica il modello** (2,5 GB, ci vuole qualche minuto):
+**Scarica i due modelli** (circa 3 GB in tutto, ci vuole qualche minuto):
 
 ```bash
 ollama pull qwen3:4b-instruct
+ollama pull qwen3-embedding:0.6b
 ```
+
+Il primo è il modello che risponde; il secondo trasforma i testi in numeri e serve per
+cercare nei documenti della scuola (lo vedremo nella lezione 3).
 
 **Controllo:** `ollama run qwen3:4b-instruct "Ciao, chi sei?"` deve rispondere qualcosa.
 
