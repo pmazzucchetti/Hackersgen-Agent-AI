@@ -1,82 +1,101 @@
-"""Simulated school system exposed over MCP: rooms, equipment and bookings.
+"""Simulated class register exposed over MCP: tests, homework, grades, reminders.
 
-It is the "outside world" our agent talks to. Data are fake and bookings are
-saved in prenotazioni.json next to this file. Start it with:
-
-    uv run scuola/server.py
+It is the "outside world" our agent talks to. Data are fake (see dati.py).
+Start it with `uv run scuola/server.py`; start over with `uv run scuola/server.py --azzera`.
 """
 
-import json
-from pathlib import Path
+import sys
+from datetime import date
 
 from mcp.server.mcpserver import MCPServer
 
-BOOKINGS_FILE = Path(__file__).with_name("prenotazioni.json")
+import dati
 
-ROOMS = [
-    {"nome": "Aula 1A", "capienza": 28, "attrezzature": ["lavagna", "proiettore"]},
-    {"nome": "Aula 2B", "capienza": 25, "attrezzature": ["lavagna"]},
-    {"nome": "Laboratorio di informatica", "capienza": 24,
-     "attrezzature": ["computer", "proiettore", "lavagna interattiva"]},
-    {"nome": "Laboratorio di chimica", "capienza": 20, "attrezzature": ["banconi", "cappa aspirante"]},
-    {"nome": "Aula magna", "capienza": 150, "attrezzature": ["proiettore", "microfoni", "palco"]},
-    {"nome": "Palestra", "capienza": 60, "attrezzature": ["spogliatoi"]},
-    {"nome": "Ufficio del preside", "capienza": 6, "attrezzature": ["tavolo riunioni", "telefono"]},
-]
-
-server = MCPServer("scuola", instructions="Aule, attrezzature e prenotazioni dell'istituto.")
+server = MCPServer("registro", instructions="Registro elettronico della classe 4B.")
 
 
-def _load_bookings() -> list[dict]:
-    if not BOOKINGS_FILE.exists():
-        return []
-    return json.loads(BOOKINGS_FILE.read_text(encoding="utf-8"))
+def _chi_e(utente: str) -> tuple[str, str | None]:
+    nome = utente.strip().lower()
+    return nome, dati.UTENTI.get(nome)
 
 
-def _overlaps(booking: dict, room: str, date: str, start: str, end: str) -> bool:
-    same_slot = booking["aula"] == room and booking["data"] == date
-    return same_slot and booking["ora_inizio"] < end and start < booking["ora_fine"]
-
-
-def _find_room(name: str) -> dict | None:
-    return next((r for r in ROOMS if r["nome"].lower() == name.strip().lower()), None)
+def _data_valida(testo: str) -> bool:
+    try:
+        date.fromisoformat(testo)
+    except ValueError:
+        return False
+    return True
 
 
 @server.tool()
-def cerca_aule(attrezzatura: str = "", capienza_minima: int = 0) -> list[dict]:
-    """Elenca le aule della scuola. Filtra per attrezzatura (es. "proiettore") e capienza minima.
-    Senza filtri restituisce tutte le aule."""
-    return [
-        r for r in ROOMS
-        if r["capienza"] >= capienza_minima
-        and (not attrezzatura or any(attrezzatura.lower() in a for a in r["attrezzature"]))
-    ]
+def verifiche(utente: str) -> list[dict] | dict:
+    """Elenca le prossime verifiche della classe, con data e argomenti."""
+    if _chi_e(utente)[1] is None:
+        return {"errore": f"Utente sconosciuto: {utente}"}
+    return dati.VERIFICHE
 
 
 @server.tool()
-def verifica_disponibilita(aula: str, data: str, ora_inizio: str, ora_fine: str) -> dict:
-    """Dice se un'aula è libera. data nel formato AAAA-MM-GG, orari nel formato HH:MM."""
-    if _find_room(aula) is None:
-        return {"errore": f"Aula sconosciuta: {aula}"}
-    clashes = [b for b in _load_bookings() if _overlaps(b, aula, data, ora_inizio, ora_fine)]
-    return {"aula": aula, "libera": not clashes, "prenotazioni_in_conflitto": clashes}
+def compiti(utente: str, data: str) -> list[dict] | dict:
+    """Elenca i compiti da fare per una certa data (formato AAAA-MM-GG)."""
+    if _chi_e(utente)[1] is None:
+        return {"errore": f"Utente sconosciuto: {utente}"}
+    if not _data_valida(data):
+        return {"errore": f"Data non valida: {data}. Usa il formato AAAA-MM-GG"}
+    return dati.COMPITI.get(data, [])
 
 
 @server.tool()
-def prenota_aula(aula: str, data: str, ora_inizio: str, ora_fine: str, richiedente: str, motivo: str) -> dict:
-    """Prenota un'aula. data nel formato AAAA-MM-GG, orari nel formato HH:MM."""
-    room = _find_room(aula)
-    if room is None:
-        return {"errore": f"Aula sconosciuta: {aula}"}
-    bookings = _load_bookings()
-    if any(_overlaps(b, room["nome"], data, ora_inizio, ora_fine) for b in bookings):
-        return {"errore": "L'aula è già occupata in quell'orario"}
-    booking = {"aula": room["nome"], "data": data, "ora_inizio": ora_inizio, "ora_fine": ora_fine,
-               "richiedente": richiedente, "motivo": motivo}
-    bookings.append(booking)
-    BOOKINGS_FILE.write_text(json.dumps(bookings, indent=2, ensure_ascii=False), encoding="utf-8")
-    return {"confermata": True, "prenotazione": booking}
+def voti(utente: str, studente: str) -> list[dict] | dict:
+    """Mostra i voti di uno studente. Uno studente può vedere solo i propri."""
+    nome, ruolo = _chi_e(utente)
+    studente = studente.strip().lower()
+    if ruolo is None:
+        return {"errore": f"Utente sconosciuto: {utente}"}
+    if ruolo == "studente" and studente != nome:
+        return {"errore": "Uno studente può vedere solo i propri voti"}
+    return dati.carica_stato()["voti"].get(studente, [])
+
+
+@server.tool()
+def cambia_voto(utente: str, studente: str, materia: str, voto: float) -> dict:
+    """Inserisce o cambia il voto di uno studente in una materia. Solo per i professori."""
+    if _chi_e(utente)[1] != "professore":
+        return {"errore": "Solo i professori possono cambiare un voto"}
+    stato = dati.carica_stato()
+    voti_studente = stato["voti"].setdefault(studente.strip().lower(), [])
+    voti_studente[:] = [v for v in voti_studente if v["materia"] != materia]
+    voti_studente.append({"materia": materia, "voto": voto})
+    dati.salva_stato(stato)
+    return {"fatto": True, "studente": studente, "materia": materia, "voto": voto}
+
+
+@server.tool()
+def aggiungi_promemoria(utente: str, testo: str, data: str) -> dict:
+    """Aggiunge un promemoria all'agenda dell'utente per una data (formato AAAA-MM-GG)."""
+    nome, ruolo = _chi_e(utente)
+    if ruolo is None:
+        return {"errore": f"Utente sconosciuto: {utente}"}
+    if not _data_valida(data):
+        return {"errore": f"Data non valida: {data}. Usa il formato AAAA-MM-GG"}
+    stato = dati.carica_stato()
+    stato["promemoria"].setdefault(nome, []).append({"testo": testo, "data": data})
+    dati.salva_stato(stato)
+    return {"fatto": True, "promemoria": {"testo": testo, "data": data}}
+
+
+@server.tool()
+def promemoria(utente: str) -> list[dict] | dict:
+    """Elenca i promemoria dell'utente."""
+    nome, ruolo = _chi_e(utente)
+    if ruolo is None:
+        return {"errore": f"Utente sconosciuto: {utente}"}
+    return dati.carica_stato()["promemoria"].get(nome, [])
 
 
 if __name__ == "__main__":
-    server.run()
+    if "--azzera" in sys.argv:
+        dati.azzera()
+        print("Registro riportato ai dati iniziali.")
+    else:
+        server.run()

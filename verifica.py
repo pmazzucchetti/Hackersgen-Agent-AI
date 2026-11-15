@@ -61,8 +61,8 @@ async def check_school_server():
     server = StdioServerParameters(command=sys.executable, args=[str(SCHOOL_SERVER)])
     async with Client(server) as client:
         tools = (await client.list_tools()).tools
-        rooms = (await client.call_tool("cerca_aule", {})).structured_content["result"]
-    ok(f"Il server della scuola risponde: {len(tools)} strumenti, {len(rooms)} aule")
+        tests = (await client.call_tool("verifiche", {"utente": "luca"})).structured_content["result"]
+    ok(f"Il registro della scuola risponde: {len(tools)} strumenti, {len(tests)} verifiche in arrivo")
     return tools
 
 
@@ -75,7 +75,8 @@ def check_model_uses_tools(tools) -> None:
     started = time.monotonic()
     reply = llm.chat.completions.create(
         model=MODEL, tools=schema,
-        messages=[{"role": "user", "content": "Quali aule della scuola hanno un proiettore?"}],
+        messages=[{"role": "system", "content": "Stai parlando con Luca (utente: luca)."},
+                  {"role": "user", "content": "Quando ho la prossima verifica?"}],
     ).choices[0].message
     seconds = round(time.monotonic() - started, 1)
     if not reply.tool_calls:
@@ -93,7 +94,7 @@ def main() -> None:
     except ImportError:
         fail("Mancano le librerie del progetto", "lancia `uv sync` e poi `uv run verifica.py`")
     except (OSError, ExceptionGroup) as exc:
-        fail(f"Il server della scuola non è partito ({exc!r})",
+        fail(f"Il registro della scuola non è partito ({exc!r})",
              "lancia `uv sync` e riprova; se non basta, copia questo messaggio in un assistente AI")
     check_model_uses_tools(tools)
     print("\nTutto pronto: ci vediamo in diretta!")
