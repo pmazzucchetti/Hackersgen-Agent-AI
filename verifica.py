@@ -17,6 +17,7 @@ import urllib.request
 from pathlib import Path
 
 MODEL = "qwen3:4b-instruct"
+EMBEDDING_MODEL = "qwen3-embedding:0.6b"
 OLLAMA = "http://localhost:11434"
 SCHOOL_SERVER = Path(__file__).parent / "scuola" / "server.py"
 
@@ -49,9 +50,10 @@ def check_ollama() -> None:
         fail("Ollama non risponde", "apri l'app Ollama (su Linux: `ollama serve`) e riprova")
     ok(f"Ollama {version} è acceso")
     names = [m["name"] for m in get_json("/api/tags")["models"]]
-    if MODEL not in names and f"{MODEL}:latest" not in names:
-        fail(f"Il modello {MODEL} non è scaricato", f"lancia `ollama pull {MODEL}` e riprova")
-    ok(f"Il modello {MODEL} è scaricato")
+    for model in (MODEL, EMBEDDING_MODEL):
+        if model not in names and f"{model}:latest" not in names:
+            fail(f"Il modello {model} non è scaricato", f"lancia `ollama pull {model}` e riprova")
+        ok(f"Il modello {model} è scaricato")
 
 
 async def check_school_server():

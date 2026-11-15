@@ -5,15 +5,16 @@ Il codice dei laboratori della live HackersGen sugli **AI Agent**: lezioni 3 e 4
 
 ## Il progetto: un assistente scolastico
 
-Costruiamo da zero, in Python, un **agent** che fa da assistente alla segreteria di una
-scuola. Un passo alla volta impara a:
+Ogni azienda oggi vuole il suo assistente AI. Costruiamo il nostro, da zero, in Python:
+**Ada**, l'assistente degli studenti della classe 4B. Un passo alla volta impara a:
 
-- rispondere a domande su aule e attrezzature;
-- verificare se un'aula è libera;
-- gestire una richiesta articolata: trovare un'aula con certe caratteristiche e prenotarla.
+- presentarsi e rispondere come vogliamo noi;
+- sapere quando sono le verifiche e cosa dice il regolamento della scuola;
+- fare cose: segnare promemoria, leggere i voti, e (solo per i professori) cambiarli.
 
-La scuola non è vera: è un **sistema simulato** (in `scuola/`) che l'agent usa attraverso
-**MCP**, lo standard con cui gli agent si collegano a strumenti e servizi esterni.
+La scuola, l'Istituto Tecnico "Valle dei Bit", non esiste: è un **registro elettronico
+simulato** (in `scuola/`) che l'agent usa attraverso **MCP**, lo standard con cui gli agent
+si collegano a strumenti e servizi esterni.
 
 Il modello di AI gira **sul tuo computer**, con Ollama: niente account, niente costi,
 nessun dato che esce dal tuo PC.
