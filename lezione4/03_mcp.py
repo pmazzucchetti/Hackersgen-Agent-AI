@@ -31,6 +31,7 @@ messaggi = [{"role": "system", "content": SYSTEM_PROMPT},
 for passo in range(MAX_PASSI):
     risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi, tools=STRUMENTI)
     messaggio = risposta.choices[0].message
+    print(f"Giro {passo + 1}: il modello ha letto e scritto {risposta.usage.total_tokens} token")
     messaggi.append(messaggio)
     if not messaggio.tool_calls:
         break
