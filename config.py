@@ -24,6 +24,10 @@ UTENTE = "luca"
 
 # Oggi, per la scuola simulata: una data fissa, così le demo danno sempre lo stesso risultato
 DATA_DI_OGGI = "2026-11-30"
+CALENDARIO = (
+    "Oggi è lunedì 2026-11-30. Questa settimana: martedì 2026-12-01, mercoledì 2026-12-02, "
+    "giovedì 2026-12-03, venerdì 2026-12-04. Le date si scrivono nel formato AAAA-MM-GG."
+)
 
 
 def client() -> OpenAI:
