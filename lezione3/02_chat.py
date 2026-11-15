@@ -14,18 +14,23 @@ llm = config.client()
 
 messaggi = []  # la memoria della chat: una semplice lista
 
-while True:
-    try:
-        domanda = input("\nTu: ")
-    except (KeyboardInterrupt, EOFError):
-        break
-    if domanda.strip().lower() == "esci":
-        break
+try:  # Ctrl+C in qualunque momento chiude la chat senza errori
+    while True:
+        try:
+            domanda = input("\nTu: ")
+        except EOFError:
+            break
+        if domanda.strip().lower() == "esci":
+            break
 
-    messaggi.append({"role": "user", "content": domanda})
-    risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi)
-    testo = risposta.choices[0].message.content
-    messaggi.append({"role": "assistant", "content": testo})
+        messaggi.append({"role": "user", "content": domanda})
+        risposta = llm.chat.completions.create(model=config.MODELLO, messages=messaggi)
+        testo = risposta.choices[0].message.content
+        messaggi.append({"role": "assistant", "content": testo})
 
-    print(f"\nAssistente: {testo}")
-    print(f"(token usati: {risposta.usage.total_tokens})")
+        print(f"\nAssistente: {testo}")
+        print(f"(token usati: {risposta.usage.total_tokens})")
+except KeyboardInterrupt:
+    pass
+
+print("\nCiao!")
