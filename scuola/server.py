@@ -59,7 +59,7 @@ def voti(utente: str, studente: str) -> list[dict] | dict:
 
 @server.tool()
 def cambia_voto(utente: str, studente: str, materia: str, voto: float) -> dict:
-    """Inserisce o cambia il voto di uno studente in una materia. Solo per i professori."""
+    """Inserisce o cambia il voto di uno studente in una materia."""
     if _chi_e(utente)[1] != "professore":
         return {"errore": "Solo i professori possono cambiare un voto"}
     stato = dati.carica_stato()
