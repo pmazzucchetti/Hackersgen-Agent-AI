@@ -78,3 +78,12 @@ def test_azzera():
 def test_verifiche_della_classe():
     verifiche = chiama("verifiche", utente="luca")
     assert all({"materia", "data", "argomenti"} <= set(v) for v in verifiche)
+
+
+def test_descrizioni_senza_regole_di_permesso():
+    async def run():
+        async with Client(server.server) as client:
+            return (await client.list_tools()).tools
+
+    for strumento in asyncio.run(run()):
+        assert "solo" not in (strumento.description or "").lower(), strumento.name

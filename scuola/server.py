@@ -47,7 +47,7 @@ def compiti(utente: str, data: str) -> list[dict] | dict:
 
 @server.tool()
 def voti(utente: str, studente: str) -> list[dict] | dict:
-    """Mostra i voti di uno studente. Uno studente può vedere solo i propri."""
+    """Mostra i voti di uno studente."""
     nome, ruolo = _chi_e(utente)
     studente = studente.strip().lower()
     if ruolo is None:
