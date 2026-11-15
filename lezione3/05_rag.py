@@ -16,6 +16,7 @@ from pathlib import Path
 import config
 
 config.controlla_modello()
+config.controlla_modello(config.MODELLO_EMBEDDING)
 llm = config.client()
 CARTELLA = Path(config.__file__).parent / "scuola"
 DOMANDA = "Posso usare il telefono in classe?"

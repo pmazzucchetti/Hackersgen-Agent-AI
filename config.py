@@ -34,13 +34,13 @@ def client() -> OpenAI:
     return OpenAI(base_url=INDIRIZZO, api_key=CHIAVE)
 
 
-def controlla_modello() -> None:
+def controlla_modello(modello: str = MODELLO) -> None:
     """Esce con un messaggio chiaro se il modello non è raggiungibile."""
     try:
         disponibili = [m.id for m in client().models.list()]
     except APIConnectionError:
         print(f"Ollama (o il servizio in {INDIRIZZO}) non risponde: è acceso?")
         sys.exit(1)
-    if MODELLO not in disponibili and f"{MODELLO}:latest" not in disponibili:
-        print(f"Il modello {MODELLO} non c'è. Con Ollama: ollama pull {MODELLO}")
+    if modello not in disponibili and f"{modello}:latest" not in disponibili:
+        print(f"Il modello {modello} non c'è. Con Ollama: ollama pull {modello}")
         sys.exit(1)
