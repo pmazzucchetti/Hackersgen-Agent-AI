@@ -27,3 +27,14 @@ def test_controlla_modello_ollama_spento(monkeypatch, capsys):
     with pytest.raises(SystemExit):
         config.controlla_modello()
     assert "Ollama" in capsys.readouterr().out
+
+
+def test_chiama_errore_di_validazione_resta_json():
+    risposta = json.loads(registro.chiama("cambia_voto", {"utente": "luca"}))
+    assert "errore" in risposta
+
+
+def test_controlla_modello_mancante(capsys):
+    with pytest.raises(SystemExit):
+        config.controlla_modello("modello-che-non-esiste")
+    assert "ollama pull modello-che-non-esiste" in capsys.readouterr().out

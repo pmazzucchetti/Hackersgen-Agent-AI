@@ -44,6 +44,8 @@ def strumenti() -> list[dict]:
 def chiama(nome: str, argomenti: dict) -> str:
     """Esegue uno strumento del registro e restituisce il risultato come testo JSON."""
     risultato = asyncio.run(_chiama(nome, argomenti))
+    if risultato.is_error:  # per esempio un argomento mancante: lo diciamo al modello
+        return json.dumps({"errore": risultato.content[0].text}, ensure_ascii=False)
     if risultato.structured_content is not None:
         contenuto = risultato.structured_content
         return json.dumps(contenuto.get("result", contenuto), ensure_ascii=False)
