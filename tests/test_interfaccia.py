@@ -40,7 +40,8 @@ def test_pagina_con_il_nome(server):
 
 def test_domanda_risposta_e_dietro_le_quinte(server):
     dati = _post(server, json.dumps({"domanda": "ciao"}).encode())
-    assert dati == {"risposta": "Hai chiesto: ciao", "dietro": ["[strumento: eco ciao]"]}
+    assert dati["risposta"] == "Hai chiesto: ciao"
+    assert dati["dietro"] == ["[strumento: eco ciao]"]
 
 
 def test_rifiuta_richieste_non_json(server):

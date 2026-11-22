@@ -31,7 +31,12 @@ CALENDARIO = (
 
 
 def client() -> OpenAI:
-    return OpenAI(base_url=INDIRIZZO, api_key=CHIAVE)
+    llm = OpenAI(base_url=INDIRIZZO, api_key=CHIAVE)
+    if "--web" in sys.argv:  # nel playground ogni chiamata viene annotata (vedi traccia.py)
+        import traccia
+
+        return traccia.attiva(llm)
+    return llm
 
 
 def controlla_modello(modello: str = MODELLO) -> None:
