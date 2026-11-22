@@ -57,3 +57,12 @@ una buona idea. Due regole:
 
 - **Dagli il contesto:** sistema operativo, comando, errore completo.
 - **Capisci prima di copiare:** l'AI sbaglia, e lo vedremo proprio in queste lezioni.
+
+## Vuoi contribuire?
+
+La repository è aperta. Se trovi un errore, hai un'idea per un esercizio o vuoi
+migliorare la guida: fai un fork, lavora sulla tua copia e apri una pull request. Per
+segnalare un problema o fare una domanda va benissimo anche una issue.
+
+Il codice è rilasciato con licenza [MIT](LICENSE): puoi riusarlo come vuoi, anche nei
+tuoi progetti.
