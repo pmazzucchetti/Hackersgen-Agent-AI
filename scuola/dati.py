@@ -1,7 +1,7 @@
 """Fake data of class 4B at Istituto Tecnico "Valle dei Bit".
 
 Fixed data (timetable, tests, homework) live here. What can change (grades and
-reminders) is saved in stato.json, next to this file.
+revision session bookings) is saved in stato.json, next to this file.
 """
 
 import copy
@@ -61,14 +61,27 @@ STATO_INIZIALE = {
             {"materia": "informatica", "voto": 8},
         ],
     },
-    "promemoria": {},
+    # Afternoon revision sessions with a teacher: few seats, students book them
+    "sportelli": [
+        {"materia": "matematica", "data": "2026-12-01", "ora": "14:30", "professore": "prof. Rossi",
+         "aula": "aula 12", "posti": 2, "iscritti": ["giulia", "marco"]},
+        {"materia": "matematica", "data": "2026-12-02", "ora": "15:00", "professore": "prof. Rossi",
+         "aula": "aula 12", "posti": 4, "iscritti": ["marco"]},
+        {"materia": "matematica", "data": "2026-12-04", "ora": "14:30", "professore": "prof. Rossi",
+         "aula": "aula 12", "posti": 4, "iscritti": []},
+        {"materia": "storia", "data": "2026-12-03", "ora": "14:30", "professore": "prof.ssa Verdi",
+         "aula": "biblioteca", "posti": 5, "iscritti": ["giulia"]},
+        {"materia": "inglese", "data": "2026-12-07", "ora": "14:30", "professore": "prof.ssa Bianchi",
+         "aula": "laboratorio linguistico", "posti": 6, "iscritti": []},
+    ],
 }
 
 
 def carica_stato() -> dict:
-    if not STATO_FILE.exists():
-        return copy.deepcopy(STATO_INIZIALE)
-    return json.loads(STATO_FILE.read_text(encoding="utf-8"))
+    stato = copy.deepcopy(STATO_INIZIALE)
+    if STATO_FILE.exists():  # parts missing from an older saved state start from the initial data
+        stato.update(json.loads(STATO_FILE.read_text(encoding="utf-8")))
+    return stato
 
 
 def salva_stato(stato: dict) -> None:
