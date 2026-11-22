@@ -65,8 +65,8 @@ def test_data_non_valida():
 
 def test_sportelli_di_una_materia():
     sportelli = chiama("sportelli", utente="luca", materia="Matematica")
-    assert sportelli and all(s["materia"] == "matematica" for s in sportelli)
-    assert all({"data", "ora", "professore", "aula", "posti_liberi", "prenotato"} <= set(s) for s in sportelli)
+    assert [s["data"] for s in sportelli] == ["2026-12-01", "2026-12-02", "2026-12-04"]
+    assert all({"data", "ora", "posti_liberi", "prenotato"} <= set(s) for s in sportelli)
 
 
 def test_sportelli_senza_materia_li_elenca_tutti():

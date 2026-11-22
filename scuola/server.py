@@ -72,18 +72,19 @@ def cambia_voto(utente: str, studente: str, materia: str, voto: float) -> dict:
 
 @server.tool()
 def sportelli(utente: str, materia: str = "") -> list[dict] | dict:
-    """Elenca gli sportelli di recupero (ripasso pomeridiano con un professore) di una materia,
-    o di tutte se la materia è vuota: data, ora, professore, aula, posti liberi e se sei già iscritto."""
+    """Elenca gli sportelli di recupero di una materia (o di tutte), con i posti liberi."""
     nome, ruolo = _chi_e(utente)
     if ruolo is None:
         return {"errore": f"Utente sconosciuto: {utente}"}
     materia = materia.strip().lower()
-    return [
-        {"materia": s["materia"], "data": s["data"], "ora": s["ora"], "professore": s["professore"],
-         "aula": s["aula"], "posti_liberi": s["posti"] - len(s["iscritti"]), "prenotato": nome in s["iscritti"]}
-        for s in dati.carica_stato()["sportelli"]
-        if not materia or s["materia"] == materia
-    ]
+    elenco = []
+    for s in dati.carica_stato()["sportelli"]:
+        if materia and s["materia"] != materia:
+            continue
+        riga = {"data": s["data"], "ora": s["ora"], "posti_liberi": s["posti"] - len(s["iscritti"]),
+                "prenotato": nome in s["iscritti"]}
+        elenco.append(riga if materia else {"materia": s["materia"], **riga})
+    return elenco
 
 
 @server.tool()
@@ -105,7 +106,8 @@ def prenota_sportello(utente: str, materia: str, data: str) -> dict:
         return {"errore": f"Lo sportello di {materia} del {data} è pieno"}
     sportello["iscritti"].append(nome)
     dati.salva_stato(stato)
-    return {"fatto": True, "sportello": {k: sportello[k] for k in ("materia", "data", "ora", "aula")}}
+    dettagli = ("materia", "data", "ora", "professore", "aula")
+    return {"fatto": True, "sportello": {k: sportello[k] for k in dettagli}}
 
 
 if __name__ == "__main__":
