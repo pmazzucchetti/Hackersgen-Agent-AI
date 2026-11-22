@@ -1,4 +1,4 @@
-"""Simulated class register exposed over MCP: tests, homework, grades, reminders.
+"""Simulated class register exposed over MCP: tests, homework, grades, revision sessions.
 
 It is the "outside world" our agent talks to. Data are fake (see dati.py).
 Start it with `uv run scuola/server.py`; start over with `uv run scuola/server.py --azzera`.
@@ -71,26 +71,41 @@ def cambia_voto(utente: str, studente: str, materia: str, voto: float) -> dict:
 
 
 @server.tool()
-def aggiungi_promemoria(utente: str, testo: str, data: str) -> dict:
-    """Aggiunge un promemoria all'agenda dell'utente per una data (formato AAAA-MM-GG)."""
+def sportelli(utente: str, materia: str = "") -> list[dict] | dict:
+    """Elenca gli sportelli di recupero (ripasso pomeridiano con un professore) di una materia,
+    o di tutte se la materia è vuota: data, ora, professore, aula, posti liberi e se sei già iscritto."""
+    nome, ruolo = _chi_e(utente)
+    if ruolo is None:
+        return {"errore": f"Utente sconosciuto: {utente}"}
+    materia = materia.strip().lower()
+    return [
+        {"materia": s["materia"], "data": s["data"], "ora": s["ora"], "professore": s["professore"],
+         "aula": s["aula"], "posti_liberi": s["posti"] - len(s["iscritti"]), "prenotato": nome in s["iscritti"]}
+        for s in dati.carica_stato()["sportelli"]
+        if not materia or s["materia"] == materia
+    ]
+
+
+@server.tool()
+def prenota_sportello(utente: str, materia: str, data: str) -> dict:
+    """Prenota un posto allo sportello di recupero di una materia in una data (formato AAAA-MM-GG)."""
     nome, ruolo = _chi_e(utente)
     if ruolo is None:
         return {"errore": f"Utente sconosciuto: {utente}"}
     if not _data_valida(data):
         return {"errore": f"Data non valida: {data}. Usa il formato AAAA-MM-GG"}
     stato = dati.carica_stato()
-    stato["promemoria"].setdefault(nome, []).append({"testo": testo, "data": data})
+    materia = materia.strip().lower()
+    sportello = next((s for s in stato["sportelli"] if s["materia"] == materia and s["data"] == data), None)
+    if sportello is None:
+        return {"errore": f"Nessuno sportello di {materia} il {data}: controlla con lo strumento sportelli"}
+    if nome in sportello["iscritti"]:
+        return {"errore": f"Sei già prenotato allo sportello di {materia} del {data}"}
+    if len(sportello["iscritti"]) >= sportello["posti"]:
+        return {"errore": f"Lo sportello di {materia} del {data} è pieno"}
+    sportello["iscritti"].append(nome)
     dati.salva_stato(stato)
-    return {"fatto": True, "promemoria": {"testo": testo, "data": data}}
-
-
-@server.tool()
-def promemoria(utente: str) -> list[dict] | dict:
-    """Elenca i promemoria dell'utente."""
-    nome, ruolo = _chi_e(utente)
-    if ruolo is None:
-        return {"errore": f"Utente sconosciuto: {utente}"}
-    return dati.carica_stato()["promemoria"].get(nome, [])
+    return {"fatto": True, "sportello": {k: sportello[k] for k in ("materia", "data", "ora", "aula")}}
 
 
 if __name__ == "__main__":

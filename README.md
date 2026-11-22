@@ -10,7 +10,7 @@ Ogni azienda oggi vuole il suo assistente AI. Costruiamo il nostro, da zero, in 
 
 - presentarsi e rispondere come vogliamo noi;
 - sapere quando sono le verifiche e cosa dice il regolamento della scuola;
-- fare cose: segnare promemoria, leggere i voti, e (solo per i professori) cambiarli.
+- fare cose: prenotare lo sportello di recupero, leggere i voti, e (solo per i professori) cambiarli.
 
 La scuola, l'Istituto Tecnico "Valle dei Bit", non esiste: è un **registro elettronico
 simulato** (in `scuola/`) che l'agent usa attraverso **MCP**, lo standard con cui gli agent
