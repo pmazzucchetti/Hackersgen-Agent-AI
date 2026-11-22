@@ -1,11 +1,11 @@
-"""Lezione 4, passo 5: gli eval, ovvero i test di un assistente AI.
+"""Approfondimento: gli eval, ovvero i test di un assistente AI.
 
 Un giorno qualcuno "migliora" il system prompt, nessuno controlla, e l'assistente
 torna a dire "sono Qwen". Con il codice normale si scrivono i test; con un modello
 si fanno gli eval: domande con la risposta attesa, da lanciare a ogni modifica.
 Qui li lanciamo due volte: con il prompt giusto e con uno "rotto".
 
-Lancia: uv run lezione4/05_eval.py
+Lancia: uv run extra/eval.py
 """
 
 import json
