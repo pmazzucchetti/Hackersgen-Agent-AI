@@ -34,6 +34,15 @@ def test_chiama_errore_di_validazione_resta_json():
     assert "errore" in risposta
 
 
+def _ollama_acceso():
+    try:
+        config.client().models.list()
+    except Exception:  # noqa: BLE001 - any failure means the model server is not reachable
+        return False
+    return True
+
+
+@pytest.mark.skipif(not _ollama_acceso(), reason="serve Ollama acceso")
 def test_controlla_modello_mancante(capsys):
     with pytest.raises(SystemExit):
         config.controlla_modello("modello-che-non-esiste")
