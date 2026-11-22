@@ -8,7 +8,7 @@ arrivano gli strumenti e chi li esegue.
 
 Lancia: uv run lezione4/03_mcp.py
 Prova:  "che compiti ho per domani?", "quali sono i miei voti?",
-        "mettimi un promemoria per giovedì: portare il workbook"
+        "ho la verifica di matematica: prenotami uno sportello prima della verifica"
 """
 
 import json

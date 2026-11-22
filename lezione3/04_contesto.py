@@ -7,7 +7,7 @@ informazioni che servono.
 
 Lancia: uv run lezione3/04_contesto.py
 Prova:  "quando ho la verifica di matematica?", "posso usare il telefono in classe?",
-        "segnami un promemoria per mercoledì: ripassare storia" (e poi: dov'è finito?)
+        "prenotami lo sportello di matematica di mercoledì" (lo sportello c'è: cosa risponde?)
 """
 
 import json

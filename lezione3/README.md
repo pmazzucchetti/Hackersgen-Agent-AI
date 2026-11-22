@@ -18,7 +18,7 @@ risolve.** Provate le stesse domande in due file vicini.
 | `01_prima_chiamata.py` | "mi chiamo Luca", poi "come mi chiamo?" | Non lo sa: ogni domanda è una chiamata a sé |
 | `02_chat.py` | le stesse due domande, poi "chi sei?" | Ora ricorda (guarda i token crescere), ma dice di essere Qwen |
 | `03_chi_sei.py` | "chi sei?", poi "quando ho la verifica di matematica?" | Ha un nome e uno scopo, ma la data della verifica se la inventa |
-| `04_contesto.py` | "quando ho la verifica di matematica?", "posso usare il telefono in classe?" | La data è giusta; sul telefono tira a indovinare. E se gli chiedi un promemoria? |
+| `04_contesto.py` | "quando ho la verifica di matematica?", "posso usare il telefono in classe?" | La data è giusta; sul telefono tira a indovinare. E se gli chiedi di prenotarti lo sportello di recupero? |
 | `05_rag.py` | "posso usare il telefono in classe?", "quando c'è il torneo di calcetto?" | Cerca nel regolamento e nella bacheca e risponde con le regole vere |
 
 ## Provate a cambiare
