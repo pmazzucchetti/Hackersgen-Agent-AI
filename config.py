@@ -50,7 +50,13 @@ def chat(rispondi, nome: str = "Assistente") -> None:
     """La parte noiosa di ogni chat: legge le domande, stampa le risposte, si ferma con "esci".
 
     `rispondi` è la funzione che ogni lezione scrive: riceve la domanda e restituisce la risposta.
+    Con --web nel comando la chat si apre nel browser (vedi interfaccia.py).
     """
+    if "--web" in sys.argv:
+        import interfaccia
+
+        interfaccia.avvia(rispondi, nome)
+        return
     print("Scrivi la tua domanda (\"esci\" per finire).")
     try:
         while True:

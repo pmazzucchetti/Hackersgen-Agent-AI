@@ -79,7 +79,7 @@ def rispondi(domanda):
             return messaggio.content
         for chiamata in messaggio.tool_calls:
             argomenti = json.loads(chiamata.function.arguments or "{}")
-            print(f"  [{chiamata.function.name}]")
+            print(f"  [{chiamata.function.name} {argomenti}]")
             if chiamata.function.name == "cerca_documenti":
                 risultato = cerca_documenti(argomenti.get("domanda", domanda))
             else:
