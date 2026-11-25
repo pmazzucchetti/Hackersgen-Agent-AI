@@ -91,6 +91,11 @@ Scaricalo da [code.visualstudio.com](https://code.visualstudio.com/) e installal
 Poi aprilo, vai su **Estensioni** (l'icona con i quadratini nella barra a sinistra), cerca
 **Python** e installa quella pubblicata da Microsoft.
 
+Usi già **VSCodium** o un altro editor? Va benissimo: nel corso l'editor serve solo per
+aprire e modificare i file, gli esercizi si lanciano dal terminale con `uv run`. Su
+VSCodium cerca **Python** tra le estensioni; se non la trovi, puoi seguire il corso anche
+senza.
+
 ## 4. Ollama e il modello
 
 **Windows e macOS** — scarica l'app da [ollama.com/download](https://ollama.com/download) e
@@ -132,6 +137,23 @@ uv sync
 
 `uv sync` scarica la versione giusta di Python e tutte le librerie del progetto. Va fatto
 **una volta adesso**, così in diretta non si scarica più niente.
+
+> **Windows su ARM (Snapdragon e simili).** Se `uv sync` si ferma su `cryptography` con un
+> errore tipo `link.exe not found`, il motivo è che quella libreria non ha una versione già
+> pronta per ARM e uv prova a compilarla. Non serve installare altro: usa il Python per
+> x64, che Windows su ARM fa girare in emulazione. Dalla cartella del progetto, in
+> PowerShell:
+>
+> ```powershell
+> uv self update
+> Remove-Item -Recurse -Force .venv
+> uv python pin cpython-3.12-windows-x86_64-none
+> uv sync
+> uv run python -c "import platform; print(platform.machine())"
+> ```
+>
+> L'ultimo comando deve stampare `AMD64`. Il comando `uv python pin` modifica il file
+> `.python-version`: è normale, non serve fare altro.
 
 ## 6. La verifica
 
